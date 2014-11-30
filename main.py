@@ -2,6 +2,7 @@ import networkx as nx
 import numpy as np
 from argh import dispatching
 from matplotlib import pyplot
+from time import time
 
 
 def generate_random_matrix(n, max_cost):
@@ -146,6 +147,8 @@ def evolution(dimension=100, max_cost=10, n_breeders=100, n_generations=100):
     print 'Distance matrix:\n', distance_matrix
     print 'Time matrix:\n', time_matrix
 
+    start = time()
+
     generation = [(np.random.permutation(dimension - 2) + 1)
                   for _ in range(n_breeders)]
 
@@ -171,8 +174,9 @@ def evolution(dimension=100, max_cost=10, n_breeders=100, n_generations=100):
                                                  list(new_generation))
         all.append((generation, avg_cost, best_cost))
 
-    print 'Finded way:\n', generation[0]
+    print 'Finded way:\n', ' -> '.join(map(str, generation[0]))
     print 'Finall cost: ', best_cost
+    print 'Computing time: {0:.2f}s'.format(time() - start)
 
     pyplot.figure(1)
     pyplot.subplot(212)
