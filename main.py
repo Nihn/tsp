@@ -1,3 +1,10 @@
+"""
+Traveling Salesman Problem solved via genetic algorithm with PMX crossbreeding
+and inverse mutating.
+
+Author: Mateusz Moneta
+"""
+
 import networkx as nx
 import numpy as np
 from argh import dispatching
@@ -136,7 +143,10 @@ def evolution(dimension=100, max_cost=10, n_breeders=100, n_generations=100, sav
     :param max_cost: max cost in costs matrix will be <1, max_cost>
     :param n_breeders: number of breeders in one generation
     :param n_generations: number of generation before which algorithm halts
-    :param save if specified generated arrays will be saved as {cost, distance, time}_matrix.npy
+    :param save: if specified generated arrays will be saved as save_{cost,
+           distance, time}.npy
+    :param load: if specified arrays will be loaded from files load_{cost,
+           distance, time}.npy
     :return: None
     """
 
@@ -176,7 +186,8 @@ def evolution(dimension=100, max_cost=10, n_breeders=100, n_generations=100, sav
     generation, avg_cost, best_cost = rating(generation)
     all = [(generation, avg_cost, best_cost)]
 
-    with ProgressBar(maxval=n_generations, widgets=['Evolution... ', Bar(), Percentage()]) as p:
+    with ProgressBar(maxval=n_generations, widgets=['Evolution... ', Bar(),
+                                                    Percentage()]) as p:
         for i in range(n_generations):
             number_of_children = np.random.randint(n_breeders)
             new_generation = np.array(generation)[np.random.random_integers(
@@ -191,7 +202,8 @@ def evolution(dimension=100, max_cost=10, n_breeders=100, n_generations=100, sav
 
     sleep(0.01)
 
-    print 'Finded way:\n 0 -> {0} -> {1}'.format(' -> '.join(map(str, generation[0])), dimension - 1)
+    print 'Finded way:\n 0 -> {0} -> {1}'.format(
+        ' -> '.join(map(str, generation[0])), dimension - 1)
     print 'Finall cost: ', best_cost
     print 'Computing time: {0:.2f}s'.format(time() - start)
 
