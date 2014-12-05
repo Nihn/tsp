@@ -191,7 +191,7 @@ def evolution(dimension=100, max_cost=10, n_breeders=100, n_generations=100, sav
 
     sleep(0.01)
 
-    print 'Finded way:\n 0 -> {0} -> {1}'.format(' -> '.join(map(str, generation[0])), dimension)
+    print 'Finded way:\n 0 -> {0} -> {1}'.format(' -> '.join(map(str, generation[0])), dimension - 1)
     print 'Finall cost: ', best_cost
     print 'Computing time: {0:.2f}s'.format(time() - start)
 
