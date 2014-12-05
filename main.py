@@ -2,7 +2,8 @@ import networkx as nx
 import numpy as np
 from argh import dispatching
 from matplotlib import pyplot
-from time import time
+from progressbar import Bar, Percentage, ProgressBar
+from time import sleep, time
 
 
 def generate_random_matrix(n, max_cost):
@@ -53,15 +54,14 @@ def make_rating_function(n_breeders, callback1, callback2, callback3,
 
         for breed_index, breed in enumerate(generation):
             previous = 0
-            total_costs = 0
+            x = y = z = 0
             for index, node in enumerate(breed):
-                x = cost_matrix[previous, node + 1]
-                y = distance_matrix[previous, node + 1]
-                z = time_matrix[previous, node + 1]
+                x += cost_matrix[previous, node + 1]
+                y += distance_matrix[previous, node + 1]
+                z += time_matrix[previous, node + 1]
                 previous = node
 
-                total_costs += callback1(x) + callback2(y) + callback3(z)
-
+            total_costs = callback1(x) + callback2(y) + callback3(z)
             generation[breed_index] = total_costs, breed
 
         generation = sorted(generation, key=lambda x: x[0])[:n_breeders]
@@ -129,19 +129,32 @@ def generate_graph(matrix, way):
             edgelist=edge_list, with_labels=True)
 
 
-def evolution(dimension=100, max_cost=10, n_breeders=100, n_generations=100):
+def evolution(dimension=100, max_cost=10, n_breeders=100, n_generations=100, save=None, load=None):
     """
     Main function, in here generations evolve
     :param dimension: number of cities, costs matrix will be dim x dim
     :param max_cost: max cost in costs matrix will be <1, max_cost>
     :param n_breeders: number of breeders in one generation
     :param n_generations: number of generation before which algorithm halts
+    :param save if specified generated arrays will be saved as {cost, distance, time}_matrix.npy
     :return: None
     """
 
-    cost_matrix = generate_random_matrix(dimension, max_cost)
-    distance_matrix = generate_random_matrix(dimension, max_cost)
-    time_matrix = generate_random_matrix(dimension, max_cost)
+    if load is None:
+        cost_matrix = generate_random_matrix(dimension, max_cost)
+        distance_matrix = generate_random_matrix(dimension, max_cost)
+        time_matrix = generate_random_matrix(dimension, max_cost)
+    else:
+        print 'Loading saved files...'
+        cost_matrix = np.load(load + '_cost.npy')
+        distance_matrix = np.load(load + '_distance.npy')
+        time_matrix = np.load(load + '_time.npy')
+
+    if save is not None:
+        print 'Saving files...'
+        np.save(save + '_cost', cost_matrix)
+        np.save(save + '_distance', distance_matrix)
+        np.save(save + '_time', time_matrix)
 
     print 'Cost matrix:\n', cost_matrix
     print 'Distance matrix:\n', distance_matrix
@@ -163,18 +176,22 @@ def evolution(dimension=100, max_cost=10, n_breeders=100, n_generations=100):
     generation, avg_cost, best_cost = rating(generation)
     all = [(generation, avg_cost, best_cost)]
 
-    for _ in range(n_generations):
-        number_of_children = np.random.randint(n_breeders)
-        new_generation = np.array(generation)[np.random.random_integers(
-            0, n_breeders - 1, number_of_children - number_of_children % 2)]
-        new_generation = pmx_crossbreed(new_generation)
-        new_generation = inverse_mutate(new_generation)
+    with ProgressBar(maxval=n_generations, widgets=['Evolution... ', Bar(), Percentage()]) as p:
+        for i in range(n_generations):
+            number_of_children = np.random.randint(n_breeders)
+            new_generation = np.array(generation)[np.random.random_integers(
+                0, n_breeders - 1, number_of_children - number_of_children % 2)]
+            new_generation = pmx_crossbreed(new_generation)
+            new_generation = inverse_mutate(new_generation)
 
-        generation, avg_cost, best_cost = rating(list(generation) +
-                                                 list(new_generation))
-        all.append((generation, avg_cost, best_cost))
+            generation, avg_cost, best_cost = rating(list(generation) +
+                                                     list(new_generation))
+            all.append((generation, avg_cost, best_cost))
+            p.update(i)
 
-    print 'Finded way:\n', ' -> '.join(map(str, generation[0]))
+    sleep(0.01)
+
+    print 'Finded way:\n 0 -> {0} -> {1}'.format(' -> '.join(map(str, generation[0])), dimension)
     print 'Finall cost: ', best_cost
     print 'Computing time: {0:.2f}s'.format(time() - start)
 
@@ -189,7 +206,7 @@ def evolution(dimension=100, max_cost=10, n_breeders=100, n_generations=100):
 
     pyplot.subplot(211)
     generate_graph(cost_matrix, generation[0])
-    pyplot.title('Finall cost: %d' % best_cost)
+    pyplot.title('Finall cost: %d (%d breeders)' % (best_cost, n_breeders))
 
     pyplot.show()
 
