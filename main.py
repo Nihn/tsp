@@ -136,7 +136,8 @@ def generate_graph(matrix, way):
             edgelist=edge_list, with_labels=True)
 
 
-def evolution(dimension=100, max_cost=10, n_breeders=100, n_generations=100, save=None, load=None):
+def evolution(dimension=100, max_cost=10, n_breeders=100, n_generations=100,
+              save=None, load=None):
     """
     Main function, in here generations evolve
     :param dimension: number of cities, costs matrix will be dim x dim
