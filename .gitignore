@@ -1,3 +1,6 @@
 .idea/
 *.pyc
 *.npy
+build/
+dist/
+tsp.egg-info
